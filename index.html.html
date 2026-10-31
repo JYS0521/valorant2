@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VALORANT 파티 조합 랜덤 생성기</title>
+<style>
+:root{color-scheme:dark;--bg:#101319;--panel:#191f29;--panel2:#222b37;--line:#344152;--text:#f3f5f7;--muted:#aab5c2;--red:#ff4655;--cyan:#62d6d0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#222b38 0,#101319 55%);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",Arial,sans-serif;min-height:100vh}
+main{max-width:980px;margin:auto;padding:34px 20px 60px}.eyebrow{color:var(--red);font-size:12px;font-weight:900;letter-spacing:2px}
+h1{font-size:clamp(27px,5vw,42px);margin:8px 0 7px;letter-spacing:-1.5px}.sub{color:var(--muted);margin:0 0 26px;line-height:1.6}
+.panel{background:rgba(25,31,41,.94);border:1px solid var(--line);border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 12px 40px #0003}
+h2{font-size:17px;margin:0 0 15px}.queue{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.queue button{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 8px;color:var(--text);font-weight:800;font-size:15px;cursor:pointer}
+.queue button.active{background:#49232b;border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+button{font:inherit}.actions{display:flex;gap:10px;margin-top:18px}.primary{flex:1;background:var(--red);color:white;border:0;border-radius:12px;padding:16px;font-weight:900;font-size:17px;cursor:pointer}.secondary{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:12px;padding:0 18px;cursor:pointer}.primary:hover{filter:brightness(1.08)}button:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.rules{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.rule{background:var(--panel2);border-radius:11px;padding:12px 10px;text-align:center}.rule b{display:block;font-size:20px;color:var(--cyan);margin-bottom:4px}.rule span{font-size:12px;color:var(--muted)}
+.result-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.result-head h2{margin:0}.count{color:var(--muted);font-size:13px}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:17px}
+.slot{background:linear-gradient(145deg,#26313e,#1b222d);border:1px solid var(--line);border-radius:14px;padding:15px;min-height:125px}
+.slot .num{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:1px}.agent{font-size:22px;font-weight:900;margin:9px 0 7px}.role{display:inline-block;font-size:11px;font-weight:800;padding:5px 8px;border-radius:6px;background:#394554;color:#e9f2f8}
+.role.duelist{background:#52262e;color:#ffb7bf}.role.initiator{background:#263d52;color:#a8d5ff}.role.controller{background:#24423f;color:#a9e9dc}.role.sentinel{background:#4a3c26;color:#f5d49c}
+.history-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.history-person{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px;min-width:0}.history-person h3{font-size:15px;margin:0 0 10px}.history-item{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid #394554;font-size:12px}.history-item span{color:var(--muted)}.history-item b{font-weight:700}.history-tools{display:flex;justify-content:flex-end;margin-top:12px}.history-tools button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:8px 11px;cursor:pointer}.empty{border:1px dashed #455263;border-radius:13px;padding:28px 16px;text-align:center;color:var(--muted);margin-top:16px;line-height:1.6}
+.note{color:var(--muted);font-size:12px;line-height:1.65;margin:14px 2px 0}
+details summary{cursor:pointer;font-weight:800} .agentlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:14px}
+label.agentcheck{display:flex;gap:8px;align-items:center;background:var(--panel2);padding:9px;border-radius:8px;font-size:13px}
+input{accent-color:var(--red)}.status{min-height:20px;color:#ffb7bf;font-size:13px;margin-top:10px}
+@media(max-width:600px){.history-grid{grid-template-columns:1fr}main{padding:24px 14px}.panel{padding:17px}.rules{grid-template-columns:repeat(2,1fr)}.rules .rule:last-child{grid-column:span 2}.actions{flex-direction:column}.secondary{padding:13px}}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">VALORANT • PARTY RANDOMIZER</div>
+<h1>3인 고정 파티 랜덤 조합</h1>
+<p class="sub">윤서 · 민섭 · 수영, 세 명에게 요원을 랜덤 배정하고 각자의 추첨 기록을 자동 저장해요.</p>
+
+<section class="panel">
+<h2>① 고정 플레이어</h2>
+<div class="queue" style="grid-template-columns:repeat(3,1fr)">
+<button class="active" type="button">윤서</button><button class="active" type="button">민섭</button><button class="active" type="button">수영</button>
+</div>
+<div class="actions"><button class="primary" id="draw">요원 뽑기</button><button class="secondary" id="reset">기록 제외 초기화</button></div>
+<div class="status" id="status" aria-live="polite"></div>
+<p class="note">매번 세 명 모두 한 명씩 배정돼요. 추첨할 때마다 각자의 요원 기록이 이 브라우저에 자동 저장됩니다.</p>
+</section>
+
+<section class="panel">
+<h2>② 적용되는 포지션 제한</h2>
+<div class="rules">
+<div class="rule"><b>2명</b><span>타격대 1선</span></div>
+<div class="rule"><b>1명</b><span>타격대 2선</span></div>
+<div class="rule"><b>1명</b><span>척후대</span></div>
+<div class="rule"><b>1명</b><span>감시자</span></div>
+<div class="rule"><b>1명</b><span>전략가</span></div>
+</div>
+<p class="note">타격대는 1선끼리 가능하고, 1선+2선도 가능하지만 2선끼리는 함께 뽑히지 않아요. 척후대·감시자·전략가는 각각 최대 한 명이며, 같은 요원은 중복되지 않아요.</p>
+</section>
+
+<section class="panel">
+<div class="result-head"><h2>③ 추첨 결과</h2><span class="count" id="count">아직 추첨 전</span></div>
+<div id="results" class="empty">아래 <b>요원 뽑기</b>를 눌러 첫 조합을 만들어보세요.</div>
+</section>
+
+<section class="panel">
+<div class="result-head"><h2>④ 플레이어별 추첨 기록</h2><span class="count" id="roundCount">0회 추첨</span></div>
+<div id="history" class="empty">아직 저장된 기록이 없어요.</div>
+<p class="note">기록은 이 기기의 브라우저에 저장돼요. 같은 브라우저에서 다시 열어도 유지됩니다.</p>
+</section>
+
+<section class="panel">
+<details>
+<summary>요원 제외 설정</summary>
+<p class="note">친구들이 사용하지 않는 요원은 체크해서 추첨 대상에서 제외할 수 있어요.</p>
+<div id="agentlist" class="agentlist"></div>
+</details>
+</section>
+<p class="note">타격대 1선·2선 구분은 일반적인 진입 역할을 기준으로 한 기본 분류예요. 취향에 따라 아래 제외 설정을 활용해 조합을 조정할 수 있어요.</p>
+</main>
+<script>
+const agents = [
+{name:"제트",role:"duelist",lane:"entry"},{name:"레이즈",role:"duelist",lane:"entry"},{name:"네온",role:"duelist",lane:"entry"},{name:"웨이레이",role:"duelist",lane:"entry"},
+{name:"레이나",role:"duelist",lane:"second"},{name:"피닉스",role:"duelist",lane:"second"},{name:"아이소",role:"duelist",lane:"second"},{name:"요루",role:"duelist",lane:"second"},{name:"허시",role:"duelist",lane:"second"},
+{name:"브리치",role:"initiator"},{name:"페이드",role:"initiator"},{name:"게코",role:"initiator"},{name:"케이/오",role:"initiator"},{name:"스카이",role:"initiator"},{name:"소바",role:"initiator"},{name:"테호",role:"initiator"},
+{name:"아스트라",role:"controller"},{name:"브림스톤",role:"controller"},{name:"클로브",role:"controller"},{name:"하버",role:"controller"},{name:"믹스",role:"controller"},{name:"오멘",role:"controller"},{name:"바이퍼",role:"controller"},
+{name:"체임버",role:"sentinel"},{name:"사이퍼",role:"sentinel"},{name:"데드록",role:"sentinel"},{name:"킬조이",role:"sentinel"},{name:"세이지",role:"sentinel"},{name:"비토",role:"sentinel"},{name:"바이스",role:"sentinel"}
+];
+const roleNames={duelist:"타격대",initiator:"척후대",controller:"전략가",sentinel:"감시자"};
+const players=["윤서","민섭","수영"];
+const STORAGE_KEY="valorant_party_history_v1";
+let excluded=new Set();
+let history=loadHistory();
+function loadHistory(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved.filter(r => r && Array.isArray(r.assignments)) : [];
+  } catch (error) {
+    return [];
+  }
+}
+function saveHistory(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    return true;
+  } catch (error) {
+    status.textContent = "브라우저 저장이 제한되어 기록을 저장하지 못했어요. 파일을 브라우저에서 직접 열어주세요.";
+    return false;
+  }
+}
+function renderHistory(){
+  const target = document.getElementById("history");
+  document.getElementById("roundCount").textContent = `${history.length}회 추첨`;
+  if (!history.length) {
+    target.className = "empty";
+    target.textContent = "아직 저장된 기록이 없어요.";
+    return;
+  }
+
+  target.className = "";
+  target.innerHTML = `
+    <div style="display:grid;gap:12px">
+      ${history.map((round, index) => `
+        <div class="history-person">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+            <div>
+              <h3 style="margin:0 0 4px">${index + 1}회차</h3>
+              <span style="font-size:11px;color:#9eacba">${round.date || "날짜 정보 없음"}</span>
+            </div>
+            <button type="button" class="delete-round" data-index="${index}"
+              style="background:transparent;color:#ff9aa3;border:1px solid #70404a;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px">
+              이 회차 삭제
+            </button>
+          </div>
+          <div class="history-grid">
+            ${players.map((name, playerIndex) => `
+              <div class="history-person" style="padding:10px">
+                <h3 style="margin:0 0 5px">${name}</h3>
+                <b>${round.assignments[playerIndex] || "미기록"}</b>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <div class="history-tools">
+      <button type="button" id="clearHistory">기록 전체 삭제</button>
+    </div>`;
+}
+document.getElementById("history").addEventListener("click", event => {
+  const deleteButton = event.target.closest(".delete-round");
+  if (deleteButton) {
+    const index = Number(deleteButton.dataset.index);
+    if (Number.isInteger(index) && index >= 0 && index < history.length) {
+      history.splice(index, 1);
+      saveHistory();
+      renderHistory();
+    }
+    return;
+  }
+
+  if (event.target.closest("#clearHistory")) {
+    history = [];
+    saveHistory();
+    renderHistory();
+  }
+});
+const results=document.getElementById("results"),status=document.getElementById("status");
+document.getElementById("agentlist").innerHTML=agents.map((a,i)=>`<label class="agentcheck"><input type="checkbox" data-index="${i}"><span>${a.name} <small style="color:#9eacba">· ${roleNames[a.role]}${a.lane==="entry"?" 1선":a.lane==="second"?" 2선":""}</small></span></label>`).join("");
+document.getElementById("agentlist").addEventListener("change",e=>{const i=Number(e.target.dataset.index);if(e.target.checked)excluded.add(i);else excluded.delete(i);});
+function valid(combo){
+ const counts={entry:0,second:0,initiator:0,controller:0,sentinel:0};
+ for(const a of combo){if(a.lane)counts[a.lane]++;else counts[a.role]++;}
+ return counts.entry<=2&&counts.second<=1&&counts.initiator<=1&&counts.controller<=1&&counts.sentinel<=1;
+}
+function choose(){
+ const pool=agents.filter((a,i)=>!excluded.has(i));let answer=null;
+ for(let attempt=0;attempt<5000&&!answer;attempt++){
+   const shuffled=[...pool].sort(()=>Math.random()-.5),picked=[];
+   for(const a of shuffled){if(picked.length===3)break;if(valid([...picked,a]))picked.push(a);}
+   if(picked.length===3)answer=picked;
+ }
+ return answer;
+}
+document.getElementById("draw").addEventListener("click",()=>{
+ const answer=choose();
+ if(!answer){results.className="empty";results.innerHTML="현재 제외 설정과 포지션 제한으로는<br>세 명이 사용할 수 있는 조합을 만들 수 없어요.";status.textContent="제외한 요원을 일부 해제한 뒤 다시 뽑아주세요.";document.getElementById("count").textContent="추첨 실패";return;}
+ status.textContent="";
+ const assignments=players.map((name,i)=>answer[i].name);
+ history.push({date:new Date().toLocaleString("ko-KR", {year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false}),assignments});
+ saveHistory();renderHistory();
+ results.className="slots";
+ results.innerHTML=answer.map((a,i)=>`<article class="slot"><div class="num">${players[i]}</div><div class="agent">${a.name}</div><span class="role ${a.role}">${roleNames[a.role]}${a.lane==="entry"?" · 1선":a.lane==="second"?" · 2선":""}</span></article>`).join("");
+ document.getElementById("count").textContent="3인 조합 완성";
+});
+document.getElementById("reset").addEventListener("click",()=>{
+ excluded.clear();document.querySelectorAll("#agentlist input").forEach(x=>x.checked=false);
+ results.className="empty";results.innerHTML="아래 <b>요원 뽑기</b>를 눌러 새 조합을 만들어보세요.";
+ document.getElementById("count").textContent="추첨 전";status.textContent="";
+});
+renderHistory();
+</script>
+</body>
+</html>
